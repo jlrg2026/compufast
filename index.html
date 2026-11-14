@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NexusOps · Gestión integral</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#f3f5fb;--sf:#fff;--sf2:#eef1f9;--tx:#141a33;--mu:#6a7394;--bd:#e0e5f2;--c1:#0ea5e9;--c2:#7c3aed;--c3:#ec4899;--c4:#10b981;--c5:#f59e0b;--sh:0 8px 30px rgba(60,80,180,.10)}
+[data-theme=dark]{--bg:#070b1a;--sf:#0f1530;--sf2:#161d3f;--tx:#e8ecff;--mu:#8590bb;--bd:#222b55;--c1:#22d3ee;--c2:#a78bfa;--c3:#ff4fa3;--c4:#2ee6a0;--c5:#ffc23d;--sh:0 8px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--tx);display:flex;min-height:100vh;transition:background .3s}
+h1,h2,h3,.logo,.kv{font-family:Sora,sans-serif}
+aside{width:236px;background:var(--sf);border-right:1px solid var(--bd);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.logo{font-weight:700;font-size:20px;display:flex;gap:10px;align-items:center;padding:4px 8px 20px}
+.logo i{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2) 60%,var(--c3));box-shadow:0 0 18px color-mix(in srgb,var(--c2) 60%,transparent)}
+.nav{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:11px;border:0;background:none;color:var(--mu);font:500 14px Inter;cursor:pointer;text-align:left;transition:.2s}
+.nav i{width:20px;text-align:center}
+.nav:hover{background:var(--sf2);color:var(--tx)}
+.nav.on{color:#fff;background:linear-gradient(120deg,var(--c2),var(--c1));box-shadow:0 6px 20px color-mix(in srgb,var(--c1) 40%,transparent)}
+main{flex:1;min-width:0;padding:22px 28px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.top h1{font-size:24px}.top p{color:var(--mu);font-size:13px;margin-top:2px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--bd);background:var(--sf);color:var(--tx);padding:10px 14px;border-radius:11px;font:600 13px Inter;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:.2s}
+.btn:hover{transform:translateY(-1px);border-color:var(--c1)}
+.btn:focus-visible,.nav:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--c1);outline-offset:2px}
+.btn.p{background:linear-gradient(120deg,var(--c2),var(--c1));color:#fff;border:0}
+.btn.r{background:linear-gradient(120deg,var(--c3),var(--c5));color:#fff;border:0}
+.btn.s{padding:6px 9px;font-size:12px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:18px;box-shadow:var(--sh)}
+.kpi{position:relative;overflow:hidden}
+.kpi:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--a)}
+.kpi .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--a);background:color-mix(in srgb,var(--a) 15%,transparent);font-size:18px;box-shadow:0 0 16px color-mix(in srgb,var(--a) 35%,transparent)}
+.kv{font-size:24px;font-weight:700;margin-top:12px}.kl{color:var(--mu);font-size:13px}
+.charts{grid-template-columns:2fr 1fr 1fr}
+.card h3{font-size:14px;margin-bottom:12px}
+.cv{position:relative;height:250px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:end}
+.filters label,.fm label{font-size:11px;color:var(--mu);display:flex;flex-direction:column;gap:4px;font-weight:600}
+input,select{background:var(--sf2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:9px 11px;font:14px Inter;min-width:130px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--mu);font-weight:600;padding:10px;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--bd)}
+tr:hover td{background:var(--sf2)}
+.b{padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.b0{background:color-mix(in srgb,var(--c1) 18%,transparent);color:var(--c1)}.b1{background:color-mix(in srgb,var(--c5) 18%,transparent);color:var(--c5)}
+.b2{background:color-mix(in srgb,var(--c4) 18%,transparent);color:var(--c4)}.b3{background:color-mix(in srgb,var(--c3) 18%,transparent);color:var(--c3)}
+.tot{display:flex;gap:18px;margin-top:14px;font-weight:600;flex-wrap:wrap}.tot span{color:var(--mu);font-weight:400}
+.empty{text-align:center;color:var(--mu);padding:36px}
+dialog{border:1px solid var(--bd);border-radius:18px;background:var(--sf);color:var(--tx);padding:24px;width:min(520px,94vw);box-shadow:0 20px 70px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(5,8,25,.65);backdrop-filter:blur(4px)}
+.fm{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.fm input,.fm select{width:100%}
+.fm .w{grid-column:1/-1}
+.ft{display:flex;justify-content:flex-end;gap:8px}
+#toast{position:fixed;bottom:22px;right:22px;background:var(--c2);color:#fff;padding:12px 18px;border-radius:12px;opacity:0;transform:translateY(12px);transition:.3s;pointer-events:none;z-index:9}
+#toast.on{opacity:1;transform:none}
+.st{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mu)}.st.ok{background:var(--c4);box-shadow:0 0 8px var(--c4)}
+@media(max-width:900px){aside{width:64px;padding:14px 8px}.nav span,.logo span{display:none}.charts{grid-template-columns:1fr}main{padding:16px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo"><i class="fa-solid fa-bolt"></i><span>NexusOps</span></div>
+  <button class="nav on" data-v="dash"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></button>
+  <button class="nav" data-v="soporte"><i class="fa-solid fa-headset"></i><span>Soporte técnico</span></button>
+  <button class="nav" data-v="cotizaciones"><i class="fa-solid fa-file-invoice-dollar"></i><span>Cotizaciones</span></button>
+  <button class="nav" data-v="ingresos"><i class="fa-solid fa-sack-dollar"></i><span>Ingresos</span></button>
+  <button class="nav" data-v="ventas"><i class="fa-solid fa-cart-shopping"></i><span>Ventas</span></button>
+</aside>
+<main>
+  <div class="top">
+    <div><h1 id="ttl"></h1><p id="sub"></p></div>
+    <div class="acts">
+      <button class="btn" id="bs" title="Google Sheets"><span class="st" id="sd"></span><i class="fa-solid fa-table"></i> Google Sheets</button>
+      <button class="btn r" id="br"><i class="fa-solid fa-file-pdf"></i> Crear reporte PDF</button>
+      <button class="btn" id="bt" title="Cambiar tema" aria-label="Cambiar tema"><i class="fa-solid fa-sun"></i></button>
+    </div>
+  </div>
+  <div id="v"></div>
+</main>
+
+<dialog id="dF"></dialog>
+<dialog id="dS">
+  <h2><i class="fa-solid fa-table"></i> Conexión con Google Sheets</h2>
+  <p style="color:var(--mu);font-size:13px;margin:10px 0">Pega la URL de tu Apps Script publicado como aplicación web (ver Code.gs). Cada módulo se guarda en una hoja con su nombre.</p>
+  <input id="su" style="width:100%" placeholder="https://script.google.com/macros/s/.../exec">
+  <div class="ft" style="margin-top:16px;flex-wrap:wrap">
+    <button class="btn" onclick="pull()"><i class="fa-solid fa-cloud-arrow-down"></i> Traer de Sheets</button>
+    <button class="btn" onclick="saveUrl();push(1)"><i class="fa-solid fa-cloud-arrow-up"></i> Enviar a Sheets</button>
+    <button class="btn p" onclick="saveUrl();dS.close()">Guardar</button>
+  </div>
+</dialog>
+<dialog id="dR">
+  <h2><i class="fa-solid fa-file-pdf"></i> Reporte profesional en PDF</h2>
+  <div class="fm">
+    <label class="w">Módulo<select id="rm" onchange="repF()"></select></label>
+    <label>Desde<input type="date" id="rd1"></label>
+    <label>Hasta<input type="date" id="rd2"></label>
+    <label class="w">Buscar texto<input id="rq" placeholder="Cliente, concepto, técnico..."></label>
+    <div id="rx" class="w fm" style="margin:0"></div>
+  </div>
+  <div class="ft"><button class="btn" onclick="dR.close()">Cancelar</button><button class="btn r" onclick="genPDF()"><i class="fa-solid fa-download"></i> Generar PDF</button></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(+n||0);
+const PR=['Baja','Media','Alta','Crítica'],ES=['Abierto','En proceso','Resuelto','Cerrado'];
+const M={
+ soporte:{t:'Soporte técnico',i:'headset',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'asunto',l:'Asunto'},{k:'prioridad',l:'Prioridad',t:'sel',o:PR},{k:'estado',l:'Estado',t:'sel',o:ES},{k:'tecnico',l:'Técnico'}]},
+ cotizaciones:{t:'Cotizaciones',i:'file-invoice-dollar',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'descripcion',l:'Descripción'},{k:'monto',l:'Monto',t:'num',m:1},{k:'estado',l:'Estado',t:'sel',o:['Borrador','Enviada','Aprobada','Rechazada']}]},
+ ingresos:{t:'Ingresos',i:'sack-dollar',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'concepto',l:'Concepto'},{k:'categoria',l:'Categoría',t:'sel',o:['Servicios','Productos','Suscripción','Otros']},{k:'metodo',l:'Método',t:'sel',o:['Transferencia','Efectivo','Tarjeta','Cheque']},{k:'monto',l:'Monto',t:'num',m:1}]},
+ ventas:{t:'Ventas',i:'cart-shopping',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'producto',l:'Producto'},{k:'cantidad',l:'Cantidad',t:'num'},{k:'precio',l:'Precio unit.',t:'num',m:1},{k:'total',l:'Total',t:'num',m:1,c:r=>r.cantidad*r.precio},{k:'pago',l:'Pago',t:'sel',o:['Pagado','Pendiente','Parcial','Cancelado']}]}
+};
+const heads=Object.fromEntries(Object.entries(M).map(([k,m])=>[k,['id',...m.f.map(x=>x.k)]]));
+let DB=JSON.parse(localStorage.getItem('nx_db')||'null'),F={},cur='dash',charts=[],tm;
+if(!DB){const d=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10),C=['Acme SA','Nova Tech','Grupo Delta','Luna Foods','Orbit MX'],A=Array.from({length:10},(_, i)=>i);
+ DB={soporte:A.map(i=>({id:i+1,fecha:d(i*12),cliente:C[i%5],asunto:['Falla de red','Instalación de software','Impresora','Respaldo','Correo'][i%5],prioridad:PR[i%4],estado:ES[(i+1)%4],tecnico:['Ana','Luis'][i%2]})),
+ cotizaciones:A.map(i=>({id:i+1,fecha:d(i*14),cliente:C[i%5],descripcion:['Cableado','Licencias','Servidor','Soporte anual','Equipo'][i%5],monto:8000+i*3200,estado:['Borrador','Enviada','Aprobada','Rechazada'][(i+2)%4]})),
+ ingresos:A.map(i=>({id:i+1,fecha:d(i*13),concepto:'Pago '+C[i%5],categoria:['Servicios','Productos','Suscripción','Otros'][i%4],metodo:['Transferencia','Efectivo','Tarjeta','Cheque'][i%4],monto:5000+i*2100})),
+ ventas:A.map(i=>({id:i+1,fecha:d(i*11),cliente:C[i%5],producto:['Laptop','Router','Licencia','Switch','Monitor'][i%5],cantidad:1+i%4,precio:1800+i*350,total:(1+i%4)*(1800+i*350),pago:['Pagado','Pendiente','Parcial','Pagado'][i%4]}))}}
+const sum=(a,k)=>a.reduce((s,r)=>s+(+r[k]||0),0);
+const url=()=>localStorage.getItem('nx_url')||'';
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2600)}
+function persist(){localStorage.setItem('nx_db',JSON.stringify(DB));clearTimeout(tm);if(url())tm=setTimeout(()=>push(),1500)}
+function filt(k,f){return DB[k].filter(r=>(!f.d1||r.fecha>=f.d1)&&(!f.d2||r.fecha<=f.d2)&&(!f.q||Object.values(r).join(' ').toLowerCase().includes(f.q.toLowerCase()))&&M[k].f.every(x=>x.t!=='sel'||!f[x.k]||r[x.k]===f[x.k])).sort((a,b)=>a.fecha<b.fecha?1:-1)}
+const cell=(x,v)=>x.t==='sel'?`<span class="b b${x.o.indexOf(v)}">${esc(v)}</span>`:x.m?money(v):esc(v);
+/* ---- Navegación ---- */
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.v));
+function go(v){cur=v;document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.v===v));charts.forEach(c=>c.destroy());charts=[];
+ if(v==='dash'){$('#ttl').textContent='Panel general';$('#sub').textContent='Resumen en tiempo real de tu operación';dash()}else table(v)}
+/* ---- Dashboard ---- */
+function dash(){
+ const D=DB,ing=sum(D.ingresos,'monto'),vp=sum(D.ventas.filter(r=>r.pago==='Pagado'),'total'),pc=sum(D.ventas.filter(r=>r.pago==='Pendiente'||r.pago==='Parcial'),'total'),
+ cq=sum(D.cotizaciones.filter(r=>r.estado==='Enviada'||r.estado==='Borrador'),'monto'),ta=D.soporte.filter(r=>r.estado==='Abierto'||r.estado==='En proceso').length,
+ ap=D.cotizaciones.filter(r=>r.estado==='Aprobada').length,cv=D.cotizaciones.length?Math.round(ap/D.cotizaciones.length*100):0;
+ const K=[['Ingresos totales',money(ing),'sack-dollar','--c4'],['Ventas cobradas',money(vp),'cart-shopping','--c1'],['Por cobrar',money(pc),'hourglass-half','--c5'],['Cotizaciones en curso',money(cq),'file-invoice-dollar','--c2'],['Tickets activos',ta,'headset','--c3'],['Conversión cotizaciones',cv+'%','bullseye','--c1']];
+ $('#v').innerHTML=`<div class="grid kpis">${K.map(k=>`<div class="card kpi" style="--a:var(${k[3]})"><div class="ic"><i class="fa-solid fa-${k[2]}"></i></div><div class="kv">${k[1]}</div><div class="kl">${k[0]}</div></div>`).join('')}</div>
+ <div class="grid charts"><div class="card"><h3>Ingresos vs ventas por mes</h3><div class="cv"><canvas id="c1"></canvas></div></div>
+ <div class="card"><h3>Tickets por estado</h3><div class="cv"><canvas id="c2"></canvas></div></div>
+ <div class="card"><h3>Cotizaciones por estado</h3><div class="cv"><canvas id="c3"></canvas></div></div></div>`;
+ const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim(),tx=g('--mu'),bd=g('--bd');
+ const ms=[...new Set([...D.ingresos,...D.ventas].map(r=>r.fecha.slice(0,7)))].sort().slice(-6);
+ const sc={x:{ticks:{color:tx},grid:{display:false}},y:{ticks:{color:tx},grid:{color:bd}}};
+ charts.push(new Chart($('#c1'),{type:'bar',data:{labels:ms,datasets:[{label:'Ingresos',data:ms.map(m=>sum(D.ingresos.filter(r=>r.fecha.startsWith(m)),'monto')),backgroundColor:g('--c4'),borderRadius:6},{label:'Ventas',data:ms.map(m=>sum(D.ventas.filter(r=>r.fecha.startsWith(m)),'total')),backgroundColor:g('--c1'),borderRadius:6}]},options:{maintainAspectRatio:false,scales:sc,plugins:{legend:{labels:{color:tx}}}}}));
+ const dn=(id,k,o,col)=>charts.push(new Chart($(id),{type:'doughnut',data:{labels:o,datasets:[{data:o.map(e=>D[k].filter(r=>r.estado===e).length),backgroundColor:col,borderColor:g('--sf'),borderWidth:3}]},options:{maintainAspectRatio:false,cutout:'66%',plugins:{legend:{position:'bottom',labels:{color:tx,boxWidth:10}}}}}));
+ dn('#c2','soporte',ES,[g('--c1'),g('--c5'),g('--c4'),g('--c3')]);dn('#c3','cotizaciones',M.cotizaciones.f[4].o,[g('--c1'),g('--c5'),g('--c4'),g('--c3')]);
+}
+/* ---- Módulos CRUD ---- */
+function table(k){const m=M[k];F[k]=F[k]||{};$('#ttl').textContent=m.t;$('#sub').textContent='Registra, filtra y consulta tu información';
+ $('#v').innerHTML=`<div class="card"><div class="filters">
+ <label>Buscar<input value="${esc(F[k].q)}" oninput="F['${k}'].q=this.value;body('${k}')" placeholder="Buscar..."></label>
+ <label>Desde<input type="date" value="${F[k].d1||''}" onchange="F['${k}'].d1=this.value;body('${k}')"></label>
+ <label>Hasta<input type="date" value="${F[k].d2||''}" onchange="F['${k}'].d2=this.value;body('${k}')"></label>
+ ${m.f.filter(x=>x.t==='sel').map(x=>`<label>${x.l}<select onchange="F['${k}'].${x.k}=this.value;body('${k}')"><option value="">Todos</option>${x.o.map(o=>`<option ${F[k][x.k]===o?'selected':''}>${o}</option>`).join('')}</select></label>`).join('')}
+ <button class="btn s" onclick="F['${k}']={};table('${k}')"><i class="fa-solid fa-eraser"></i> Limpiar</button>
+ <button class="btn p" style="margin-left:auto" onclick="form('${k}')"><i class="fa-solid fa-plus"></i> Nuevo registro</button></div>
+ <div class="tw"><table><thead><tr>${m.f.map(x=>`<th>${x.l}</th>`).join('')}<th></th></tr></thead><tbody id="tb"></tbody></table></div><div class="tot" id="tt"></div></div>`;body(k)}
+function body(k){const m=M[k],r=filt(k,F[k]);
+ $('#tb').innerHTML=r.length?r.map(x=>`<tr>${m.f.map(f=>`<td>${cell(f,x[f.k])}</td>`).join('')}<td style="white-space:nowrap"><button class="btn s" aria-label="Editar" onclick="form('${k}',${x.id})"><i class="fa-solid fa-pen"></i></button> <button class="btn s" aria-label="Eliminar" onclick="del('${k}',${x.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''):`<tr><td colspan="9" class="empty"><i class="fa-regular fa-folder-open"></i> Sin registros. Crea el primero con “Nuevo registro”.</td></tr>`;
+ $('#tt').innerHTML=`<div><span>Registros:</span> ${r.length}</div>`+m.f.filter(x=>x.m).map(x=>`<div><span>${x.l}:</span> ${money(sum(r,x.k))}</div>`).join('')}
+function form(k,id){const m=M[k],r=id?DB[k].find(x=>x.id===id):{fecha:new Date().toISOString().slice(0,10)};
+ $('#dF').innerHTML=`<h2><i class="fa-solid fa-${m.i}"></i> ${id?'Editar':'Nuevo'} · ${m.t}</h2><div class="fm">${m.f.filter(x=>!x.c).map(x=>`<label class="${x.k.match(/asunto|descripcion|concepto/)?'w':''}">${x.l}${x.t==='sel'?`<select id="f_${x.k}">${x.o.map(o=>`<option ${r[x.k]===o?'selected':''}>${o}</option>`).join('')}</select>`:`<input id="f_${x.k}" type="${x.t==='date'?'date':x.t==='num'?'number':'text'}" step="any" value="${esc(r[x.k])}">`}</label>`).join('')}</div>
+ <div class="ft"><button class="btn" onclick="dF.close()">Cancelar</button><button class="btn p" onclick="save('${k}',${id||0})"><i class="fa-solid fa-check"></i> Guardar</button></div>`;dF.showModal()}
+function save(k,id){const o={id:id||Date.now()};M[k].f.forEach(x=>{if(!x.c){const v=$('#f_'+x.k).value;o[x.k]=x.t==='num'?+v||0:v}});M[k].f.forEach(x=>{if(x.c)o[x.k]=x.c(o)});
+ if(!o.fecha){toast('Indica la fecha del registro');return}
+ const i=DB[k].findIndex(x=>x.id===id);i>=0?DB[k][i]=o:DB[k].push(o);persist();dF.close();body(k);toast('Registro guardado')}
+function del(k,id){if(confirm('¿Eliminar este registro?')){DB[k]=DB[k].filter(x=>x.id!==id);persist();body(k);toast('Registro eliminado')}}
+/* ---- Google Sheets ---- */
+function saveUrl(){localStorage.setItem('nx_url',$('#su').value.trim());dot()}
+function dot(){$('#sd').className='st'+(url()?' ok':'')}
+$('#bs').onclick=()=>{$('#su').value=url();dS.showModal()};
+async function push(m){if(!url()){toast('Configura primero la URL de Google Sheets');return}
+ try{await fetch(url(),{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({data:DB,heads})});m&&toast('Datos enviados a Google Sheets')}catch(e){toast('No se pudo conectar con Google Sheets')}}
+async function pull(){saveUrl();if(!url()){toast('Configura primero la URL de Google Sheets');return}
+ try{const o=await(await fetch(url())).json();Object.keys(M).forEach(k=>{if(Array.isArray(o[k]))DB[k]=o[k].map(r=>({...r,id:+r.id||Date.now()+Math.random()}))});localStorage.setItem('nx_db',JSON.stringify(DB));dS.close();go(cur);toast('Datos importados desde Google Sheets')}catch(e){toast('No se pudo leer la hoja. Revisa la URL y los permisos')}}
+/* ---- Reporte PDF ---- */
+$('#rm').innerHTML='<option value="all">Reporte general (todos los módulos)</option>'+Object.entries(M).map(([k,m])=>`<option value="${k}">${m.t}</option>`).join('');
+function repF(){const m=$('#rm').value;$('#rx').innerHTML=m==='all'?'':M[m].f.filter(x=>x.t==='sel').map(x=>`<label>${x.l}<select id="rf_${x.k}"><option value="">Todos</option>${x.o.map(o=>`<option>${o}</option>`).join('')}</select></label>`).join('')}
+$('#br').onclick=()=>{repF();dR.showModal()};
+function genPDF(){const m=$('#rm').value,ks=m==='all'?Object.keys(M):[m],f={d1:$('#rd1').value,d2:$('#rd2').value,q:$('#rq').value},fs=[];
+ if(m!=='all')M[m].f.forEach(x=>{if(x.t==='sel'){f[x.k]=$('#rf_'+x.k).value;if(f[x.k])fs.push(x.l+': '+f[x.k])}});
+ if(f.d1)fs.push('Desde '+f.d1);if(f.d2)fs.push('Hasta '+f.d2);if(f.q)fs.push('Texto: '+f.q);
+ const doc=new jspdf.jsPDF({unit:'pt',format:'a4'}),W=doc.internal.pageSize.getWidth();
+ doc.setFillColor(10,15,40);doc.rect(0,0,W,88,'F');doc.setFillColor(34,211,238);doc.rect(0,88,W,4,'F');doc.setFillColor(167,139,250);doc.rect(W*.5,88,W*.5,4,'F');
+ doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text('NexusOps',40,44);doc.setFontSize(12);doc.setFont('helvetica','normal');
+ doc.text('Reporte de '+(m==='all'?'gestión general':M[m].t),40,64);doc.setFontSize(9);doc.text('Generado: '+new Date().toLocaleString('es-MX'),W-40,44,{align:'right'});
+ doc.setTextColor(90,100,130);doc.text('Filtros aplicados: '+(fs.length?fs.join('  |  '):'Ninguno'),40,116,{maxWidth:W-80});let y=134;
+ if(m==='all'){doc.autoTable({startY:y,head:[['Módulo','Registros','Total monetario']],body:ks.map(k=>{const r=filt(k,f),mf=M[k].f.find(x=>x.m);return[M[k].t,r.length,mf?money(sum(r,mf.k)):'—']}),theme:'grid',headStyles:{fillColor:[124,58,237]},styles:{fontSize:10}});y=doc.lastAutoTable.finalY+26}
+ ks.forEach(k=>{const r=filt(k,f),mf=M[k].f.filter(x=>x.m);if(y>700){doc.addPage();y=50}
+  doc.setTextColor(15,20,50);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text(M[k].t+' ('+r.length+')',40,y);
+  doc.autoTable({startY:y+8,head:[M[k].f.map(x=>x.l)],body:r.map(x=>M[k].f.map(c=>c.m?money(x[c.k]):x[c.k])),foot:mf.length?[M[k].f.map((c,i)=>i===0?'Totales':c.m?money(sum(r,c.k)):'')]:undefined,theme:'striped',headStyles:{fillColor:[14,165,233]},footStyles:{fillColor:[236,72,153],textColor:255},alternateRowStyles:{fillColor:[240,244,255]},styles:{fontSize:8.5,cellPadding:5},margin:{left:40,right:40}});y=doc.lastAutoTable.finalY+30});
+ const n=doc.internal.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(130);doc.text('NexusOps · Página '+i+' de '+n,W/2,820,{align:'center'})}
+ doc.save('reporte_'+(m==='all'?'general':m)+'_'+new Date().toISOString().slice(0,10)+'.pdf');dR.close();toast('Reporte PDF generado')}
+/* ---- Tema ---- */
+function theme(t){document.documentElement.dataset.theme=t;localStorage.setItem('nx_th',t);$('#bt').innerHTML=`<i class="fa-solid fa-${t==='dark'?'sun':'moon'}"></i>`;if(cur==='dash')go('dash')}
+$('#bt').onclick=()=>theme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+theme(localStorage.getItem('nx_th')||'dark');dot();go('dash');if(url())pull();
+</script>
+</body>
+</html>
