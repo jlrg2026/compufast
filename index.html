@@ -92,7 +92,7 @@ dialog::backdrop{background:rgba(5,8,25,.65);backdrop-filter:blur(4px)}
 <dialog id="dS">
   <h2><i class="fa-solid fa-gear"></i> Configuración</h2>
   <p style="color:var(--mu);font-size:13px;margin:10px 0">Pega la URL de tu Apps Script publicado como aplicación web (ver Code.gs). Cada módulo se guarda en una hoja con su nombre.</p>
-  <input id="su" style="width:100%" placeholder="https://script.google.com/macros/s/AKfycbzrFLHVxVRDyARq3G8UHnJ_DbrFxU79cBDNHF-vhhUprmMwFimGNS6Sn166QBWRdTcl/exec">
+  <input id="su" style="width:100%" placeholder="https://script.google.com/macros/s/.../exec">
   <p style="color:var(--mu);font-size:13px;margin:16px 0 8px">Datos de contacto que aparecen en el banner del correo de cotización:</p>
   <div class="fm" style="margin:0"><label>Correo de ventas<input id="cm" type="email" placeholder="ventas@compufast.com"></label><label>Teléfono / WhatsApp<input id="ct" placeholder="55 1234 5678"></label></div>
   <div class="ft" style="margin-top:16px;flex-wrap:wrap">
@@ -170,18 +170,18 @@ function dash(){
 /* ---- Módulos CRUD ---- */
 function table(k){const m=M[k];F[k]=F[k]||{};$('#ttl').textContent=m.t;$('#sub').textContent='Registra, filtra y consulta tu información';
  $('#v').innerHTML=`<div class="card"><div class="filters">
- <label>Buscar<input value="${esc(F[k].q)}" oninput="F['${k}'].q=this.value;body('${k}')" placeholder="Buscar..."></label>
- <label>Desde<input type="date" value="${F[k].d1||''}" onchange="F['${k}'].d1=this.value;body('${k}')"></label>
- <label>Hasta<input type="date" value="${F[k].d2||''}" onchange="F['${k}'].d2=this.value;body('${k}')"></label>
- ${m.f.filter(x=>x.t==='sel').map(x=>`<label>${x.l}<select onchange="F['${k}'].${x.k}=this.value;body('${k}')"><option value="">Todos</option>${x.o.map(o=>`<option ${F[k][x.k]===o?'selected':''}>${o}</option>`).join('')}</select></label>`).join('')}
+ <label>Buscar<input value="${esc(F[k].q)}" oninput="F['${k}'].q=this.value;renderBody('${k}')" placeholder="Buscar..."></label>
+ <label>Desde<input type="date" value="${F[k].d1||''}" onchange="F['${k}'].d1=this.value;renderBody('${k}')"></label>
+ <label>Hasta<input type="date" value="${F[k].d2||''}" onchange="F['${k}'].d2=this.value;renderBody('${k}')"></label>
+ ${m.f.filter(x=>x.t==='sel').map(x=>`<label>${x.l}<select onchange="F['${k}'].${x.k}=this.value;renderBody('${k}')"><option value="">Todos</option>${x.o.map(o=>`<option ${F[k][x.k]===o?'selected':''}>${o}</option>`).join('')}</select></label>`).join('')}
  <button class="btn s" onclick="F['${k}']={};table('${k}')"><i class="fa-solid fa-eraser"></i> Limpiar</button>
- <button class="btn p" style="margin-left:auto" onclick="form('${k}')"><i class="fa-solid fa-plus"></i> Nuevo registro</button></div>
- <div class="tw"><table><thead><tr>${m.f.filter(x=>!x.h).map(x=>`<th>${x.l}</th>`).join('')}<th></th></tr></thead><tbody id="tb"></tbody></table></div><div class="tot" id="tt"></div></div>`;body(k)}
-function body(k){const m=M[k],r=filt(k,F[k]),bs=m.b?r.reduce((a,x)=>a+(+m.b(x)||0),0):0;
- $('#tb').innerHTML=r.length?r.map(x=>`<tr>${m.f.filter(f=>!f.h).map(f=>`<td>${cell(f,x[f.k])}</td>`).join('')}<td style="white-space:nowrap">${k==='cotizaciones'?`<button class="btn s" aria-label="Enviar cotización" title="Enviar por correo" onclick="mail(${x.id})"><i class="fa-solid fa-paper-plane"></i></button> `:''}<button class="btn s" aria-label="Editar" onclick="form('${k}',${x.id})"><i class="fa-solid fa-pen"></i></button> <button class="btn s" aria-label="Eliminar" onclick="del('${k}',${x.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''):`<tr><td colspan="9" class="empty"><i class="fa-regular fa-folder-open"></i> Sin registros. Crea el primero con “Nuevo registro”.</td></tr>`;
+ <button class="btn p" style="margin-left:auto" onclick="openForm('${k}')"><i class="fa-solid fa-plus"></i> Nuevo registro</button></div>
+ <div class="tw"><table><thead><tr>${m.f.filter(x=>!x.h).map(x=>`<th>${x.l}</th>`).join('')}<th></th></tr></thead><tbody id="tb"></tbody></table></div><div class="tot" id="tt"></div></div>`;renderBody(k)}
+function renderBody(k){const m=M[k],r=filt(k,F[k]),bs=m.b?r.reduce((a,x)=>a+(+m.b(x)||0),0):0;
+ $('#tb').innerHTML=r.length?r.map(x=>`<tr>${m.f.filter(f=>!f.h).map(f=>`<td>${cell(f,x[f.k])}</td>`).join('')}<td style="white-space:nowrap">${k==='cotizaciones'?`<button class="btn s" aria-label="Enviar cotización" title="Enviar por correo" onclick="mail(${x.id})"><i class="fa-solid fa-paper-plane"></i></button> `:''}<button class="btn s" aria-label="Editar" onclick="openForm('${k}',${x.id})"><i class="fa-solid fa-pen"></i></button> <button class="btn s" aria-label="Eliminar" onclick="del('${k}',${x.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join(''):`<tr><td colspan="9" class="empty"><i class="fa-regular fa-folder-open"></i> Sin registros. Crea el primero con “Nuevo registro”.</td></tr>`;
  $('#tt').innerHTML=`<div><span>Registros:</span> ${r.length}</div>`+m.f.filter(x=>x.m&&!x.nt).map(x=>`<div><span>${x.tl||x.l}:</span> ${money(sum(r,x.k))}</div>`).join('')+(bs?`<div><span>% Ganancia:</span> ${(sum(r,'utilidad')/bs*100).toFixed(1)}%</div>`:'')}
 let IMG='',GK='';
-function form(k,id){const m=M[k],r=id?DB[k].find(x=>x.id===id):{fecha:new Date().toISOString().slice(0,10)};IMG=r.imagen||'';GK=k;
+function openForm(k,id){const m=M[k],r=id?DB[k].find(x=>x.id===id):{fecha:new Date().toISOString().slice(0,10)};IMG=r.imagen||'';GK=k;
  const inp=x=>x.t==='sel'?`<select id="f_${x.k}">${x.o.map(o=>`<option ${r[x.k]===o?'selected':''}>${o}</option>`).join('')}</select>`
  :x.t==='img'?`<input type="file" accept="image/*" onchange="loadImg(this)"><img id="pv" class="pv" alt="" src="${IMG}" ${IMG?'':'hidden'}>`
  :x.t==='auto'?`<input id="f_${x.k}" readonly value="${esc(r[x.k]||nextNum())}">`
@@ -196,7 +196,7 @@ function loadImg(i){const f=i.files[0];if(!f)return;const rd=new FileReader();rd
 function save(k,id){const o={id:id||Date.now(),...read(k)};
  if(k==='cotizaciones'){o.imagen=IMG;if(!id)o.numero=nextNum()}
  if(!o.fecha){toast('Indica la fecha del registro');return}
- const i=DB[k].findIndex(x=>x.id===id);i>=0?DB[k][i]=o:DB[k].push(o);persist();dF.close();body(k);toast(k==='cotizaciones'?'Cotización '+o.numero+' guardada':'Registro guardado')}
+ const i=DB[k].findIndex(x=>x.id===id);i>=0?DB[k][i]=o:DB[k].push(o);persist();dF.close();renderBody(k);toast(k==='cotizaciones'?'Cotización '+o.numero+' guardada':'Registro guardado')}
 /* ---- Correo de cotización ---- */
 let MR=null;
 function mailHTML(r){const F='font-family:Arial,Helvetica,sans-serif;',c=CO(),TB='role="presentation" cellpadding="0" cellspacing="0" border="0"';
@@ -227,7 +227,7 @@ function eml(){const r=MR,h=$('#mp').innerHTML.split(r.imagen||'\u0000').join('c
  let t='To: '+$('#mt').value+'\r\nSubject: =?UTF-8?B?'+u($('#ms').value)+'?=\r\nX-Unsent: 1\r\nMIME-Version: 1.0\r\nContent-Type: multipart/related; boundary="cf1"\r\n\r\n--cf1\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n'+b(u(h));
  if(r.imagen)t+='--cf1\r\nContent-Type: image/jpeg\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <prod>\r\nContent-Disposition: inline; filename="producto.jpg"\r\n\r\n'+b(r.imagen.split(',')[1]);
  t+='--cf1--\r\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'message/rfc822'}));a.download='Cotizacion_'+r.numero+'.eml';a.click();toast('Archivo .eml descargado: ábrelo y envía')}
-function del(k,id){if(confirm('¿Eliminar este registro?')){DB[k]=DB[k].filter(x=>x.id!==id);persist();body(k);toast('Registro eliminado')}}
+function del(k,id){if(confirm('¿Eliminar este registro?')){DB[k]=DB[k].filter(x=>x.id!==id);persist();renderBody(k);toast('Registro eliminado')}}
 /* ---- Google Sheets ---- */
 function saveUrl(){localStorage.setItem('nx_url',$('#su').value.trim());localStorage.setItem('nx_co',JSON.stringify({mail:$('#cm').value.trim(),tel:$('#ct').value.trim()}));dot()}
 const CO=()=>{try{return JSON.parse(localStorage.getItem('nx_co')||'{}')}catch(e){return{}}};
@@ -262,3 +262,4 @@ theme(localStorage.getItem('nx_th')||'dark');dot();go('dash');if(url())pull();
 </script>
 </body>
 </html>
+
