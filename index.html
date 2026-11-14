@@ -57,6 +57,9 @@ tr:hover td{background:var(--sf2)}
 .empty{text-align:center;color:var(--mu);padding:36px}.th{width:44px;height:44px;object-fit:cover;border-radius:8px;display:block}.pv{max-height:140px;max-width:100%;border-radius:10px;margin-top:6px;object-fit:contain}.mp{border:1px dashed var(--bd);border-radius:12px;padding:10px;background:#eef1f9;margin-bottom:14px;color:#1e293b}
 .wt{width:100%;background:var(--sf2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:12px;font:13.5px/1.5 Inter,sans-serif;resize:vertical}
 .it{padding:12px;margin-bottom:10px;background:var(--sf2);box-shadow:none}
+.ofg{grid-template-columns:minmax(0,1fr) 340px;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.cvb{width:100%;height:auto;border-radius:16px;box-shadow:var(--sh);display:block}
 dialog{border:1px solid var(--bd);border-radius:18px;background:var(--sf);color:var(--tx);padding:24px;max-height:92vh;overflow:auto;width:min(520px,94vw);box-shadow:0 20px 70px rgba(0,0,0,.5)}
 dialog::backdrop{background:rgba(5,8,25,.65);backdrop-filter:blur(4px)}
 .fm{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.fm input,.fm select{width:100%}
@@ -65,7 +68,7 @@ dialog::backdrop{background:rgba(5,8,25,.65);backdrop-filter:blur(4px)}
 #toast{position:fixed;inset:auto 22px 22px auto;margin:0;border:0;background:var(--c2);color:#fff;padding:12px 18px;border-radius:12px;opacity:0;transform:translateY(12px);transition:.3s;pointer-events:none;z-index:9}
 #toast.on{opacity:1;transform:none}
 .st{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mu)}.st.ok{background:var(--c4);box-shadow:0 0 8px var(--c4)}
-@media(max-width:900px){aside{width:64px;padding:14px 8px}.nav span,.logo span{display:none}.charts{grid-template-columns:1fr}main{padding:16px}}
+@media(max-width:900px){aside{width:64px;padding:14px 8px}.nav span,.logo span{display:none}.charts,.ofg{grid-template-columns:1fr}main{padding:16px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -77,6 +80,7 @@ dialog::backdrop{background:rgba(5,8,25,.65);backdrop-filter:blur(4px)}
   <button class="nav" data-v="cotizaciones"><i class="fa-solid fa-file-invoice-dollar"></i><span>Cotizaciones</span></button>
   <button class="nav" data-v="ingresos"><i class="fa-solid fa-sack-dollar"></i><span>Ingresos</span></button>
   <button class="nav" data-v="ventas"><i class="fa-solid fa-cart-shopping"></i><span>Ventas</span></button>
+  <button class="nav" data-v="ofertas"><i class="fa-solid fa-fire"></i><span>Ofertas</span></button>
 </aside>
 <main>
   <div class="top">
@@ -120,28 +124,28 @@ dialog::backdrop{background:rgba(5,8,25,.65);backdrop-filter:blur(4px)}
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money=n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(+n||0);
-const PR=['Baja','Media','Alta','Crítica'],ES=['Abierto','En proceso','Resuelto','Cerrado'],TIPOS=['CTE RM','Otros','Tel-Cliente'];
+const PR=['Baja','Media','Alta','Crítica'],ES=['Abierto','En proceso','Resuelto','Cerrado'],TIPOS=['CTE RM','Otros'];
 const r2=n=>Math.round(n*100)/100,r1=n=>Math.round(n*10)/10,sin=(v,i)=>i==='No incluido'?+v:v/1.16;
 /* Productos de una cotización (migra cotizaciones antiguas de 1 solo producto) */
 const its=r=>{let a=r.items;if(typeof a==='string'){try{a=JSON.parse(a)}catch(e){a=null}}if(!Array.isArray(a)||!a.length)a=[{producto:r.producto||'',imagen:r.imagen||'',descripcion:r.descripcion||'',cantidad:1,monto:+r.monto||0,costo:+r.costo||0,link:r.link||''}];return a.map(i=>({producto:'',imagen:'',descripcion:'',link:'',...i,cantidad:+i.cantidad||1,monto:+i.monto||0,costo:+i.costo||0}))};
 const M={
- soporte:{t:'Soporte técnico',i:'headset',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'origen',l:'Tipo',t:'sel',o:TIPOS},{k:'asunto',l:'Asunto'},{k:'tipo',l:'Modalidad',t:'sel',o:['On-Site','Remoto']},{k:'cotizacion',l:'Cotización asignada',t:'sel',q:1,get o(){return ['No Aplica',...DB.cotizaciones.map(r=>r.numero).sort()]}},{k:'prioridad',l:'Prioridad',t:'sel',o:PR},{k:'estado',l:'Estado',t:'sel',o:ES},{k:'tecnico',l:'Técnico'},{k:'precio',l:'Precio unitario',t:'num',m:1,tl:'Ingresos soporte'},{k:'costo',l:'Costo unitario',t:'num',m:1,tl:'Costo total'},{k:'utilidad',l:'Ganancia',t:'num',m:1,tl:'Ganancia total',c:r=>r2(r.precio-r.costo)},{k:'margen',l:'% Ganancia',t:'num',p:1,c:r=>r.precio?r1((r.precio-r.costo)/r.precio*100):0}],b:r=>r.precio},
- cotizaciones:{t:'Cotizaciones',i:'file-invoice-dollar',f:[{k:'numero',l:'N.º',t:'auto'},{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'origen',l:'Tipo',t:'sel',o:TIPOS},{k:'correo',l:'Correo del cliente',h:1},{k:'producto',l:'Producto(s)',c:r=>its(r).map(i=>(i.cantidad>1?i.cantidad+'× ':'')+i.producto).join(', ')},{k:'imagen',l:'Imagen del producto',t:'img',c:r=>(its(r).find(i=>i.imagen)||{}).imagen||''},{k:'descripcion',l:'Descripción',h:1,c:r=>its(r).map(i=>i.descripcion).filter(Boolean).join(' | ')},{k:'monto',l:'Total cotizado',t:'num',m:1,tl:'Venta cotizada',c:r=>r2(its(r).reduce((s,i)=>s+i.cantidad*i.monto,0))},{k:'costo',l:'Costo total',t:'num',m:1,tl:'Costo total',c:r=>r2(its(r).reduce((s,i)=>s+i.cantidad*i.costo,0))},{k:'utilidad',l:'Ganancia',t:'num',m:1,tl:'Ganancia total',c:r=>Math.round((r.monto-r.costo)*100)/100},{k:'margen',l:'% Ganancia',t:'num',p:1,c:r=>r.monto?Math.round((r.monto-r.costo)/r.monto*1000)/10:0},{k:'link',l:'Link de compra (proveedor)',t:'url',c:r=>(its(r).find(i=>i.link)||{}).link||''},{k:'estado',l:'Estado',t:'sel',o:['Borrador','Enviada','Aprobada','Rechazada']},{k:'items',l:'Productos (detalle)',t:'json',h:1}],b:r=>r.monto},
+ soporte:{t:'Soporte técnico',i:'headset',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'telefono',l:'Tel-Cliente',t:'tel'},{k:'origen',l:'Tipo',t:'sel',o:TIPOS},{k:'asunto',l:'Asunto'},{k:'tipo',l:'Modalidad',t:'sel',o:['On-Site','Remoto']},{k:'cotizacion',l:'Cotización asignada',t:'sel',q:1,get o(){return ['No Aplica',...DB.cotizaciones.map(r=>r.numero).sort()]}},{k:'prioridad',l:'Prioridad',t:'sel',o:PR},{k:'estado',l:'Estado',t:'sel',o:ES},{k:'tecnico',l:'Técnico'},{k:'precio',l:'Precio unitario',t:'num',m:1,tl:'Ingresos soporte'},{k:'costo',l:'Costo unitario',t:'num',m:1,tl:'Costo total'},{k:'utilidad',l:'Ganancia',t:'num',m:1,tl:'Ganancia total',c:r=>r2(r.precio-r.costo)},{k:'margen',l:'% Ganancia',t:'num',p:1,c:r=>r.precio?r1((r.precio-r.costo)/r.precio*100):0}],b:r=>r.precio},
+ cotizaciones:{t:'Cotizaciones',i:'file-invoice-dollar',f:[{k:'numero',l:'N.º',t:'auto'},{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'telefono',l:'Tel-Cliente',t:'tel'},{k:'origen',l:'Tipo',t:'sel',o:TIPOS},{k:'correo',l:'Correo del cliente',h:1},{k:'producto',l:'Producto(s)',c:r=>its(r).map(i=>(i.cantidad>1?i.cantidad+'× ':'')+i.producto).join(', ')},{k:'imagen',l:'Imagen del producto',t:'img',c:r=>(its(r).find(i=>i.imagen)||{}).imagen||''},{k:'descripcion',l:'Descripción',h:1,c:r=>its(r).map(i=>i.descripcion).filter(Boolean).join(' | ')},{k:'monto',l:'Total cotizado',t:'num',m:1,tl:'Venta cotizada',c:r=>r2(its(r).reduce((s,i)=>s+i.cantidad*i.monto,0))},{k:'costo',l:'Costo total',t:'num',m:1,tl:'Costo total',c:r=>r2(its(r).reduce((s,i)=>s+i.cantidad*i.costo,0))},{k:'utilidad',l:'Ganancia',t:'num',m:1,tl:'Ganancia total',c:r=>Math.round((r.monto-r.costo)*100)/100},{k:'margen',l:'% Ganancia',t:'num',p:1,c:r=>r.monto?Math.round((r.monto-r.costo)/r.monto*1000)/10:0},{k:'link',l:'Link de compra (proveedor)',t:'url',c:r=>(its(r).find(i=>i.link)||{}).link||''},{k:'estado',l:'Estado',t:'sel',o:['Borrador','Enviada','Aprobada','Rechazada']},{k:'items',l:'Productos (detalle)',t:'json',h:1}],b:r=>r.monto},
  ingresos:{t:'Ingresos',i:'sack-dollar',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'concepto',l:'Concepto'},{k:'categoria',l:'Categoría',t:'sel',o:['Servicios','Productos','Suscripción','Otros']},{k:'metodo',l:'Método',t:'sel',o:['Transferencia','Efectivo','Tarjeta','Cheque']},{k:'monto',l:'Monto cobrado',t:'num',m:1,tl:'Total cobrado'},{k:'iva',l:'I.V.A. en el monto',t:'sel',o:['Incluido','No incluido']},{k:'neto',l:'Monto neto (sin I.V.A.)',t:'num',m:1,tl:'Monto neto sin I.V.A.',c:r=>r2(sin(r.monto,r.iva))},{k:'costo',l:'Costo',t:'num',m:1,tl:'Costo total'},{k:'utilidad',l:'Ganancia',t:'num',m:1,tl:'Ganancia total',c:r=>r2(r.neto-r.costo)},{k:'margen',l:'% Ganancia',t:'num',p:1,c:r=>r.neto?r1((r.neto-r.costo)/r.neto*100):0}],b:r=>r.neto},
  ventas:{t:'Ventas',i:'cart-shopping',f:[{k:'fecha',l:'Fecha',t:'date'},{k:'cliente',l:'Cliente'},{k:'producto',l:'Producto'},{k:'cantidad',l:'Cantidad',t:'num'},{k:'precio',l:'Precio unitario',t:'num',m:1,nt:1},{k:'iva',l:'I.V.A. en el precio',t:'sel',o:['Incluido','No incluido']},{k:'psin',l:'Precio sin I.V.A.',t:'num',m:1,nt:1,c:r=>r2(sin(r.precio,r.iva))},{k:'costo',l:'Costo unitario',t:'num',m:1,nt:1},{k:'total',l:'Total',t:'num',m:1,c:r=>r2(r.cantidad*r.precio)},{k:'utilidad',l:'Ganancia',t:'num',m:1,tl:'Ganancia total (sin I.V.A.)',c:r=>r2((r.psin-r.costo)*r.cantidad)},{k:'margen',l:'% Ganancia',t:'num',p:1,c:r=>r.psin?r1((r.psin-r.costo)/r.psin*100):0},{k:'pago',l:'Pago',t:'sel',o:['Pagado','Pendiente','Parcial','Cancelado']}],b:r=>r.psin*r.cantidad}
 };
 const heads=Object.fromEntries(Object.entries(M).map(([k,m])=>[k,['id',...m.f.map(x=>x.k)]]));
 let DB=JSON.parse(localStorage.getItem('nx_db')||'null'),F={},cur='dash',charts=[],tm;
 if(!DB){const d=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10),C=['Acme SA','Nova Tech','Grupo Delta','Luna Foods','Orbit MX'],A=Array.from({length:10},(_, i)=>i);
- DB={soporte:A.map(i=>({id:i+1,fecha:d(i*12),cliente:C[i%5],origen:TIPOS[i%3],asunto:['Falla de red','Instalación de software','Impresora','Respaldo','Correo'][i%5],tipo:['On-Site','Remoto'][i%2],prioridad:PR[i%4],estado:ES[(i+1)%4],tecnico:['Ana','Luis'][i%2],precio:350+i*150,cotizacion:i%2?'No Aplica':'COT-'+String(i+1).padStart(4,'0'),costo:Math.round((350+i*150)*.5)})),
- cotizaciones:A.map(i=>({id:i+1,numero:'COT-'+String(i+1).padStart(4,'0'),fecha:d(i*14),cliente:C[i%5],origen:TIPOS[i%3],correo:'',producto:['Cableado','Licencias','Servidor','Soporte anual','Equipo'][i%5],imagen:'',descripcion:['Cableado','Licencias','Servidor','Soporte anual','Equipo'][i%5],monto:8000+i*3200,costo:Math.round((8000+i*3200)*.72),utilidad:Math.round((8000+i*3200)*.28),margen:28,link:'',estado:['Borrador','Enviada','Aprobada','Rechazada'][(i+2)%4]})),
+ DB={soporte:A.map(i=>({id:i+1,fecha:d(i*12),cliente:C[i%5],origen:TIPOS[i%2],asunto:['Falla de red','Instalación de software','Impresora','Respaldo','Correo'][i%5],tipo:['On-Site','Remoto'][i%2],prioridad:PR[i%4],estado:ES[(i+1)%4],tecnico:['Ana','Luis'][i%2],precio:350+i*150,cotizacion:i%2?'No Aplica':'COT-'+String(i+1).padStart(4,'0'),costo:Math.round((350+i*150)*.5)})),
+ cotizaciones:A.map(i=>({id:i+1,numero:'COT-'+String(i+1).padStart(4,'0'),fecha:d(i*14),cliente:C[i%5],origen:TIPOS[i%2],correo:'',producto:['Cableado','Licencias','Servidor','Soporte anual','Equipo'][i%5],imagen:'',descripcion:['Cableado','Licencias','Servidor','Soporte anual','Equipo'][i%5],monto:8000+i*3200,costo:Math.round((8000+i*3200)*.72),utilidad:Math.round((8000+i*3200)*.28),margen:28,link:'',estado:['Borrador','Enviada','Aprobada','Rechazada'][(i+2)%4]})),
  ingresos:A.map(i=>({id:i+1,fecha:d(i*13),concepto:'Pago '+C[i%5],categoria:['Servicios','Productos','Suscripción','Otros'][i%4],metodo:['Transferencia','Efectivo','Tarjeta','Cheque'][i%4],monto:5000+i*2100,iva:'Incluido',costo:Math.round((5000+i*2100)*.45)})),
  ventas:A.map(i=>({id:i+1,fecha:d(i*11),cliente:C[i%5],producto:['Laptop','Router','Licencia','Switch','Monitor'][i%5],cantidad:1+i%4,precio:1800+i*350,iva:'Incluido',costo:Math.round((1800+i*350)*.55),total:(1+i%4)*(1800+i*350),pago:['Pagado','Pendiente','Parcial','Pagado'][i%4]}))}}
 function nextNum(){const n=Math.max(0,...DB.cotizaciones.map(r=>parseInt(String(r.numero||'').replace(/\D/g,''))||0));return 'COT-'+String(n+1).padStart(4,'0')}
 DB.cotizaciones.filter(r=>!r.numero).forEach(r=>r.numero=nextNum());
 function recalc(){DB.cotizaciones.filter(r=>!r.numero).forEach(r=>r.numero=nextNum());
  DB.cotizaciones.forEach(r=>{r.items=JSON.stringify(its(r))});
- Object.keys(M).forEach(k=>DB[k].forEach(r=>{M[k].f.forEach(x=>{if(x.c)return;if(x.t==='num')r[x.k]=+r[x.k]||0;else if(x.t==='sel'&&!r[x.k])r[x.k]=x.o[0];else if((x.t==='url'||x.t==='img')&&r[x.k]==null)r[x.k]=''});M[k].f.forEach(x=>{if(x.c)r[x.k]=x.c(r)})}))}
+ Object.keys(M).forEach(k=>DB[k].forEach(r=>{M[k].f.forEach(x=>{if(x.c)return;if(x.t==='num')r[x.k]=+r[x.k]||0;else if(x.t==='sel'&&!r[x.k])r[x.k]=x.o[0];else if((x.t==='url'||x.t==='img'||x.t==='tel')&&r[x.k]==null)r[x.k]=''});M[k].f.forEach(x=>{if(x.c)r[x.k]=x.c(r)})}))}
 recalc();
 const sum=(a,k)=>a.reduce((s,r)=>s+(+r[k]||0),0);
 const url=()=>localStorage.getItem('nx_url')||'';
@@ -152,7 +156,7 @@ const cell=(x,v)=>x.q?`<b>${esc(v||'No Aplica')}</b>`:x.p?`<b style="color:var($
 /* ---- Navegación ---- */
 document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>go(b.dataset.v));
 function go(v){cur=v;document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.v===v));charts.forEach(c=>c.destroy());charts=[];
- if(v==='dash'){$('#ttl').textContent='Panel general';$('#sub').textContent='Resumen en tiempo real de tu operación';dash()}else table(v)}
+ if(v==='dash'){$('#ttl').textContent='Panel general';$('#sub').textContent='Resumen en tiempo real de tu operación';dash()}else if(v==='ofertas'){$('#ttl').textContent='Ofertas';$('#sub').textContent='Busca ofertas en Amazon.com.mx y crea banners para tus estados de WhatsApp';ofertas()}else table(v)}
 /* ---- Dashboard ---- */
 function dash(){
  const D=DB,ing=sum(D.ingresos,'monto'),vp=sum(D.ventas.filter(r=>r.pago==='Pagado'),'total'),pc=sum(D.ventas.filter(r=>r.pago==='Pendiente'||r.pago==='Parcial'),'total'),
@@ -189,7 +193,7 @@ let ITEMS=[],GK='';const blank=()=>({producto:'',imagen:'',descripcion:'',cantid
 function openForm(k,id){const m=M[k],r=id?DB[k].find(x=>x.id===id):{fecha:new Date().toISOString().slice(0,10)};GK=k;ITEMS=k==='cotizaciones'?(id?its(r):[blank()]):[];$('#dF').style.width=k==='cotizaciones'?'min(760px,95vw)':'';
  const inp=x=>x.t==='sel'?`<select id="f_${x.k}">${x.o.map(o=>`<option ${r[x.k]===o?'selected':''}>${o}</option>`).join('')}</select>`
  :x.t==='auto'?`<input id="f_${x.k}" readonly value="${esc(r[x.k]||nextNum())}">`
- :`<input id="f_${x.k}" type="${x.t==='date'?'date':x.t==='num'?'number':x.k==='correo'?'email':x.t==='url'?'url':'text'}" step="any" value="${esc(r[x.k])}">`;
+ :`<input id="f_${x.k}" type="${x.t==='date'?'date':x.t==='num'?'number':x.k==='correo'?'email':x.t==='tel'?'tel':x.t==='url'?'url':'text'}" step="any" value="${esc(r[x.k])}">`;
  $('#dF').innerHTML=`<h2><i class="fa-solid fa-${m.i}"></i> ${id?'Editar':'Nuevo'} · ${m.t}</h2><div class="fm">${m.f.filter(x=>!x.c&&x.t!=='json').map(x=>`<label class="${/asunto|descripcion|concepto|imagen|link/.test(x.k)?'w':''}">${x.l}${inp(x)}</label>`).join('')}</div>${k==='cotizaciones'?'<h3 style="margin:4px 0 10px"><i class="fa-solid fa-boxes-stacked"></i> Productos de la cotización</h3><div id="its"></div><button type="button" class="btn s" onclick="addItem()" style="margin-bottom:14px"><i class="fa-solid fa-plus"></i> Agregar otro producto</button>':''}${M[k].f.some(x=>x.k==='utilidad')?'<div id="gp" class="mp" style="color:var(--tx);background:var(--sf2)"></div>':''}
  <div class="ft"><button class="btn" onclick="dF.close()">Cancelar</button><button class="btn p" onclick="save('${k}',${id||0})"><i class="fa-solid fa-check"></i> Guardar</button></div>`;dF.showModal();if(k==='cotizaciones')renderItems();if($('#gp'))gp()}
 function renderItems(){$('#its').innerHTML=ITEMS.map((x,i)=>`<div class="card it"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Producto ${i+1}</b>${ITEMS.length>1?`<button type="button" class="btn s" aria-label="Quitar producto" onclick="rmItem(${i})"><i class="fa-solid fa-trash"></i></button>`:''}</div>
@@ -212,14 +216,74 @@ function save(k,id){const o={id:id||Date.now(),...read(k)};
  if(k==='cotizaciones'){if(!ITEMS.length||!ITEMS.every(i=>String(i.producto).trim())){toast('Cada producto necesita nombre; quita los vacíos');return}if(!id)o.numero=nextNum()}
  if(!o.fecha){toast('Indica la fecha del registro');return}
  const i=DB[k].findIndex(x=>x.id===id);i>=0?DB[k][i]=o:DB[k].push(o);persist();dF.close();renderBody(k);toast(k==='cotizaciones'?'Cotización '+o.numero+' guardada':'Registro guardado')}
+/* ---- Ofertas Amazon + banner para estados de WhatsApp ---- */
+const AMZ='https://www.amazon.com.mx/s?k=';
+const CATS=[['Apple Watch','apple watch','clock'],['iPad','ipad apple','tablet-screen-button'],['iPhone','iphone apple','mobile-screen'],['MacBook Air','macbook air','laptop'],['Laptops','laptop','laptop-code'],['Monitores','monitor','display'],['AirPods','airpods','headphones'],['Tablets','tablet','tablet'],['Teclados y mouse','teclado mouse inalámbrico','keyboard'],['SSD y discos','ssd disco duro','hard-drive'],['Routers WiFi','router wifi','wifi'],['Impresoras','impresora','print'],['Consolas','consola videojuegos','gamepad']];
+const THEMES=[{n:'Azul eléctrico',a:'#071a5c',b:'#2d5af0',c:'#22d3ee',h:'#ffd400',k:'#0b1f6b'},{n:'Fuego',a:'#3b0610',b:'#e11d48',c:'#ff9f1c',h:'#fff200',k:'#4a0a14'},{n:'Neón',a:'#1b0b3d',b:'#7c3aed',c:'#ff4fa3',h:'#2ee6a0',k:'#1b0b3d'}];
+const BADGES=['🔥 SÚPER OFERTA','⚡ OFERTA RELÁMPAGO','💥 PRECIAZO','🎁 PRECIO ESPECIAL','⏰ SOLO POR HOY'];
+const BN={producto:'Apple iPad 10.ª generación 64 GB',antes:9999,ahora:7499,detalle:'Envío gratis · Meses sin intereses',link:'',badge:0,tema:0,img:null};
+function ofertas(){
+ $('#v').innerHTML=`<div class="grid ofg"><div class="grid" style="gap:16px">
+ <div class="card"><h3><i class="fa-brands fa-amazon"></i> Buscar ofertas en Amazon.com.mx</h3>
+ <div class="chips">${CATS.map(c=>`<button class="btn s" onclick="amz('${c[1]}')"><i class="fa-solid fa-${c[2]}"></i> ${c[0]}</button>`).join('')}</div>
+ <div class="filters" style="margin:14px 0 0"><label>Otra búsqueda<input id="aq" placeholder="Ej. Samsung Galaxy, Kindle..." onkeydown="if(event.key==='Enter')amz(this.value)"></label><button class="btn p" onclick="amz($('#aq').value)"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button><button class="btn r" onclick="window.open('https://www.amazon.com.mx/gp/goldbox','_blank','noopener')"><i class="fa-solid fa-fire"></i> Ofertas del día</button></div>
+ <p style="color:var(--mu);font-size:12px;margin-top:12px">Amazon se abre en una pestaña nueva. Elige la oferta, copia nombre, precios y link, guarda la imagen del producto (clic derecho → Guardar imagen) y llena el creador de banner.</p></div>
+ <div class="card"><h3><i class="fa-solid fa-wand-magic-sparkles"></i> Creador de banner para estado de WhatsApp</h3>
+ <div class="fm" style="margin:0"><label class="w">Producto<input value="${esc(BN.producto)}" oninput="bn('producto',this.value)"></label>
+ <label>Precio anterior<input type="number" step="any" value="${BN.antes}" oninput="bn('antes',+this.value)"></label>
+ <label>Precio de oferta<input type="number" step="any" value="${BN.ahora}" oninput="bn('ahora',+this.value)"></label>
+ <label>Etiqueta<select onchange="bn('badge',+this.value)">${BADGES.map((b,i)=>`<option value="${i}" ${BN.badge===i?'selected':''}>${b}</option>`).join('')}</select></label>
+ <label>Estilo<select onchange="bn('tema',+this.value)">${THEMES.map((t,i)=>`<option value="${i}" ${BN.tema===i?'selected':''}>${t.n}</option>`).join('')}</select></label>
+ <label class="w">Detalle (envío, meses sin intereses...)<input value="${esc(BN.detalle)}" oninput="bn('detalle',this.value)"></label>
+ <label class="w">Link de Amazon (va en el texto para copiar)<input type="url" value="${esc(BN.link)}" oninput="bn('link',this.value)" placeholder="https://www.amazon.com.mx/..."></label>
+ <label class="w">Imagen del producto<input type="file" accept="image/*" onchange="bnImg(this)"></label></div>
+ <div id="bnd" class="mp" style="color:var(--tx);background:var(--sf2);margin:14px 0"></div>
+ <div class="ft" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn p" onclick="bnDl()"><i class="fa-solid fa-download"></i> Descargar PNG</button><button class="btn" onclick="bnCopy()"><i class="fa-solid fa-image"></i> Copiar imagen</button><button class="btn" onclick="bnShare()"><i class="fa-solid fa-share-nodes"></i> Compartir</button><button class="btn" onclick="bnCopyTxt()"><i class="fa-brands fa-whatsapp"></i> Copiar texto</button></div></div></div>
+ <div class="card" style="position:sticky;top:16px"><h3>Vista previa (1080×1920)</h3><canvas id="bn" width="1080" height="1920" class="cvb"></canvas></div></div>`;
+ drawBN();if(document.fonts)document.fonts.ready.then(drawBN)}
+function amz(q){q=String(q||'').trim();if(!q){toast('Escribe qué quieres buscar');return}window.open(AMZ+encodeURIComponent(q+' oferta'),'_blank','noopener')}
+function bn(k,v){BN[k]=v;drawBN()}
+function bnImg(i){const f=i.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{BN.img=im;drawBN()};im.src=rd.result};rd.readAsDataURL(f)}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function wrapT(g,t,x,y,mw,lh,max){const L=[];let l='';for(const w of String(t).split(/\s+/)){const s=l?l+' '+w:w;if(g.measureText(s).width>mw&&l){L.push(l);l=w}else l=s}if(l)L.push(l);if(L.length>max){L.length=max;L[max-1]=L[max-1].replace(/.{0,3}$/,'…')}L.forEach((s,i)=>g.fillText(s,x,y+i*lh))}
+const pm=n=>'$'+(+n||0).toLocaleString('es-MX',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2});
+function drawBN(){const cv=$('#bn');if(!cv)return;const g=cv.getContext('2d'),T=THEMES[BN.tema],W=1080,H=1920,FN='Sora,Inter,"Arial Black",Arial,sans-serif',ant=+BN.antes||0,aho=+BN.ahora||0,pct=ant>aho&&aho>0?Math.round((1-aho/ant)*100):0;
+ const d=$('#bnd');if(d)d.innerHTML=pct?`<i class="fa-solid fa-tag"></i> Descuento: <b>${pct}%</b> · Ahorro: <b>${money(ant-aho)}</b>`:'Pon un precio anterior mayor al de oferta para mostrar el descuento';
+ const sh=(c,b,y)=>{g.shadowColor=c;g.shadowBlur=b;g.shadowOffsetY=y||0},ns=()=>{g.shadowColor='transparent';g.shadowBlur=0;g.shadowOffsetY=0};
+ g.clearRect(0,0,W,H);g.textAlign='center';g.textBaseline='alphabetic';
+ let gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,T.a);gr.addColorStop(.55,T.b);gr.addColorStop(1,T.a);g.fillStyle=gr;g.fillRect(0,0,W,H);
+ g.save();g.translate(540,780);for(let i=0;i<24;i++){g.rotate(Math.PI/12);if(i%2)continue;g.fillStyle='rgba(255,255,255,.07)';g.beginPath();g.moveTo(0,0);g.lineTo(-170,-1500);g.lineTo(170,-1500);g.closePath();g.fill()}g.restore();
+ gr=g.createRadialGradient(540,780,40,540,780,780);gr.addColorStop(0,'rgba(255,255,255,.30)');gr.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);
+ g.fillStyle='rgba(255,255,255,.06)';[[0,1750,320],[1080,1480,280],[1000,120,200]].forEach(c=>{g.beginPath();g.arc(c[0],c[1],c[2],0,7);g.fill()});
+ g.fillStyle='#fff';g.textAlign='left';g.font=`800 54px ${FN}`;g.fillText('⚡ CompuFAST',60,105);g.textAlign='right';g.font=`600 30px ${FN}`;g.fillStyle=T.c;g.fillText('OFERTAS TECH',1020,102);g.textAlign='center';
+ const bt=BADGES[BN.badge];let fs=78;g.font=`900 ${fs}px ${FN}`;while(g.measureText(bt).width>860&&fs>40){fs-=4;g.font=`900 ${fs}px ${FN}`}
+ const pw=Math.min(960,g.measureText(bt).width+120);sh('rgba(0,0,0,.4)',30,12);rr(g,(W-pw)/2,165,pw,130,65);g.fillStyle=T.h;g.fill();ns();g.fillStyle=T.k;g.fillText(bt,540,165+65+fs*.35);
+ sh('rgba(0,0,0,.45)',60,26);rr(g,140,360,800,720,56);g.fillStyle='#fff';g.fill();ns();
+ if(BN.img){const im=BN.img,s=Math.min(740/im.width,660/im.height),w=im.width*s,h=im.height*s;g.drawImage(im,540-w/2,720-h/2,w,h)}else{g.fillStyle='#94a3b8';g.font=`600 42px ${FN}`;g.fillText('Sube la imagen del producto',540,730)}
+ if(pct){g.save();g.translate(880,400);g.rotate(-.2);sh('rgba(0,0,0,.45)',24,10);g.beginPath();for(let i=0;i<32;i++){const r=i%2?138:178,a=i*Math.PI/16;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fillStyle=T.h;g.fill();ns();g.fillStyle=T.k;g.font=`900 88px ${FN}`;g.fillText('-'+pct+'%',0,22);g.font=`800 28px ${FN}`;g.fillText('DESCUENTO',0,66);g.restore()}
+ g.fillStyle='#fff';g.font=`800 66px ${FN}`;sh('rgba(0,0,0,.35)',10,4);wrapT(g,BN.producto||'Nombre del producto',540,1170,940,78,2);ns();
+ if(ant>aho&&ant){g.font=`600 52px ${FN}`;const t='Antes '+pm(ant),w=g.measureText(t).width;g.fillStyle='rgba(255,255,255,.85)';g.fillText(t,540,1385);g.strokeStyle='#ff4d4d';g.lineWidth=7;g.beginPath();g.moveTo(540-w/2-10,1368);g.lineTo(540+w/2+10,1368);g.stroke()}
+ const pt=pm(aho);fs=210;g.font=`900 ${fs}px ${FN}`;while(g.measureText(pt).width>960&&fs>80){fs-=6;g.font=`900 ${fs}px ${FN}`}
+ sh('rgba(0,0,0,.5)',24,10);g.fillStyle=T.h;g.fillText(pt,540,1580);ns();
+ if(BN.detalle){g.font=`700 40px ${FN}`;const w=Math.min(960,g.measureText(BN.detalle).width+90);rr(g,(W-w)/2,1620,w,78,39);g.fillStyle='rgba(255,255,255,.18)';g.fill();g.fillStyle='#fff';g.fillText(BN.detalle,540,1672,w-40)}
+ sh('rgba(0,0,0,.4)',24,10);rr(g,90,1735,900,110,55);g.fillStyle=T.h;g.fill();ns();g.fillStyle=T.k;g.font=`900 46px ${FN}`;g.fillText('¡PÍDELO CON COMPUFAST!',540,1805);
+ const tel=CO().tel;g.fillStyle='#fff';g.font=`700 40px ${FN}`;g.fillText(tel?'WhatsApp '+tel:'Cotiza sin compromiso',540,1880);
+ g.fillStyle='rgba(255,255,255,.7)';g.font=`400 24px ${FN}`;g.fillText('Precios y existencias sujetos a cambio sin previo aviso.',540,1908)}
+function bnBlob(cb){$('#bn').toBlob(cb,'image/png')}
+function bnDl(){bnBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='oferta_'+(BN.producto||'banner').replace(/[^\w]+/g,'_').slice(0,30)+'.png';a.click();toast('Banner descargado. Súbelo a tu estado de WhatsApp')})}
+function bnCopy(){bnBlob(async b=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Imagen copiada. Pégala en WhatsApp')}catch(e){toast('Tu navegador no permite copiar la imagen. Usa Descargar PNG')}})}
+function bnShare(){bnBlob(async b=>{const f=new File([b],'oferta.png',{type:'image/png'});try{if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:bnTxt()});else toast('Compartir no está disponible aquí. Usa Descargar PNG')}catch(e){}})}
+function bnTxt(){const a=+BN.antes||0,h=+BN.ahora||0,p=a>h&&h>0?Math.round((1-h/a)*100):0,c=CO();return [`*${BADGES[BN.badge]}*`,'',`*${BN.producto}*`,a>h?`~Antes: ${money(a)}~`:null,`*AHORA: ${money(h)}*`+(p?` (-${p}%)`:''),BN.detalle||null,BN.link?'🛒 '+BN.link:null,'','_Precios y existencias sujetos a cambio._','Pídelo con CompuFAST'+(c.tel?' · '+c.tel:'')].filter(x=>x!==null).join('\n')}
+async function bnCopyTxt(){const t=bnTxt();try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}toast('Texto copiado. Pégalo en WhatsApp')}
+
 /* ---- WhatsApp ---- */
 function waTxt(r){const c=CO(),I=its(r);
- return ['*⚡ CompuFAST*','*Cotización '+r.numero+'* · '+r.fecha,'','Cliente: *'+r.cliente+'*'+(r.origen?'\nTipo: '+r.origen:''),'','*Productos:*',...I.map((i,n)=>(n+1)+'. *'+i.producto+'*'+(i.descripcion?'\n    '+i.descripcion:'')+'\n    Cantidad: '+i.cantidad+' × '+money(i.monto)+'\n    Subtotal: *'+money(i.cantidad*i.monto)+'*'),'','*TOTAL: '+money(r.monto)+'* + 16% I.V.A.','Total con I.V.A.: '+money(r2(r.monto*1.16)),'','_Vigencia 15 días · Existencias sujetas a disponibilidad._','_Las imágenes son solo de referencia._','','¿Te la dejamos lista hoy? ✅'+(c.tel?'\nTel / WhatsApp: '+c.tel:'')].join('\n')}
+ return ['*⚡ CompuFAST*','*Cotización '+r.numero+'* · '+r.fecha,'','Cliente: *'+r.cliente+'*'+(r.origen?'\nTipo: '+r.origen:'')+(r.telefono?'\nTel-Cliente: '+r.telefono:''),'','*Productos:*',...I.map((i,n)=>(n+1)+'. *'+i.producto+'*'+(i.descripcion?'\n    '+i.descripcion:'')+'\n    Cantidad: '+i.cantidad+' × '+money(i.monto)+'\n    Subtotal: *'+money(i.cantidad*i.monto)+'*'),'','*TOTAL: '+money(r.monto)+'* + 16% I.V.A.','Total con I.V.A.: '+money(r2(r.monto*1.16)),'','_Vigencia 15 días · Existencias sujetas a disponibilidad._','_Las imágenes son solo de referencia._','','¿Te la dejamos lista hoy? ✅'+(c.tel?'\nTel / WhatsApp: '+c.tel:'')].join('\n')}
 function wa(id){MR=DB.cotizaciones.find(x=>x.id===id);
  $('#dM').innerHTML=`<h2><i class="fa-brands fa-whatsapp"></i> WhatsApp · ${esc(MR.numero)}</h2><p style="color:var(--mu);font-size:12px;margin:10px 0">Formato listo para WhatsApp (negritas y cursivas incluidas). Edítalo si quieres, cópialo y pégalo en el chat.</p><textarea id="wt" class="wt" rows="17">${esc(waTxt(MR))}</textarea>
  <div class="ft" style="flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="dM.close()">Cerrar</button><button class="btn" onclick="openWa()"><i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp</button><button class="btn p" onclick="copyWa()"><i class="fa-solid fa-copy"></i> Copiar texto</button></div>`;dM.showModal()}
 async function copyWa(){const t=$('#wt').value;try{await navigator.clipboard.writeText(t)}catch(e){$('#wt').select();document.execCommand('copy')}toast('Texto copiado. Pégalo en WhatsApp')}
-function openWa(){window.open('https://wa.me/?text='+encodeURIComponent($('#wt').value),'_blank','noopener')}
+function openWa(){const d=String(MR.telefono||'').replace(/\D/g,''),n=d.length===10?'52'+d:d;window.open('https://wa.me/'+n+'?text='+encodeURIComponent($('#wt').value),'_blank','noopener')}
 /* ---- Correo de cotización ---- */
 let MR=null;
 function mailHTML(r){const F='font-family:Arial,Helvetica,sans-serif;',c=CO(),TB='role="presentation" cellpadding="0" cellspacing="0" border="0"',I=its(r),n=I.length,tot=n>1||I[0].cantidad>1;
